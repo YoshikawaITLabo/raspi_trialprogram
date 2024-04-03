@@ -1,7 +1,6 @@
 import mysql.connector
 
-def main():
-    # MySQLに接続
+def dacquisition(sql):
     conn = mysql.connector.connect(
         host="localhost",
         user="root",
@@ -11,13 +10,18 @@ def main():
     )
     # カーソルを取得
     cursor = conn.cursor()
+    cursor.execute(sql)
+    result=cursor.fetchall()
+
+    return result
+
+def main():
+    # MySQLに接続
 
     #SQL
     sql = "SELECT `serial`,`hostname`,`port`,`user`,`passphrase`,`keysfolder`,`keysfile`,`sourcefolder`,`destinationfolder`,`ProcessedDate` FROM `hostlist`;"
 
-    cursor.execute(sql)
-
-    result=cursor.fetchall()
+    result = dacquisition(sql)
 
     for item in result:
         print(item[0])
