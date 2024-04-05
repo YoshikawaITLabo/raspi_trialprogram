@@ -19,8 +19,22 @@ def main():
     # MySQLに接続
 
     #SQL
-    sql = "SELECT `serial`,`hostname`,`port`,`user`,`passphrase`,`keysfolder`,`keysfile`,`sourcefolder`,`destinationfolder`,`ProcessedDate` FROM `hostlist`;"
-
+    sql = "SELECT"
+    sql += " `id`"
+    sql += ",`hostname`"
+    sql += ",`port`"
+    sql += ",`user`"
+    sql += ",`keysfolder`"
+    sql += ",`keyfile`"
+    sql += ",`passphrase`"
+    sql += ",`copy_source`"
+    sql += ",`Copy_to`"
+    sql += ",`Storage`"
+    sql += ",`created_at`"
+    sql += ",`updated_at`"
+    sql += " FROM"
+    sql += " `hostlist`;"
+    print (sql)
     result = dacquisition(sql)
 
     for item in result:
