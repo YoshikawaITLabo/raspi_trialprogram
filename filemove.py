@@ -3,6 +3,7 @@ import shutil
 import os
 
 def main():
+    
     # MySQLに接続
     conn = mysql.connector.connect(
         host="localhost",
@@ -18,11 +19,12 @@ def main():
     sql = "SELECT "
     sql += " `FileName`"
     sql += ",`FileSize`"
-    sql += ",`CreationDate`"
-    sql += ",`ProcessedDate`"
     sql += " FROM"
     sql += "`templist`"
+    sql += " ORDER BY"
+    sql += " CreationDate"
     sql += ";"
+    print(sql)
 
     #SQL実行
     cursor.execute(sql)
@@ -30,13 +32,18 @@ def main():
     result=cursor.fetchall()
 
     for item in result:
-        fn = '/home/kazuhiro/Downloads/'
-        fn += item[0]
-        shutil.copy2(fn, "/mnt/rasp_nas/ras_backup/")
+        sendfn = '/home/kazuhiro/Downloads/'
+        recefn = '/mnt/rsp_nas/ras_backup'
 
-        os.remove(fn)
-        print(fn)
+        sendfn += item[0]
+        #recefn += item[0]
+        
+        print(sendfn)
+        print(recefn)
 
+        shutil.copy2(sendfn, recefn)
+
+        os.remove(sendfn)
     
 if __name__ == "__main__":
     main()
