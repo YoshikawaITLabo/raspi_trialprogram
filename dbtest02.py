@@ -1,16 +1,15 @@
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import padding as sym_padding
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding as sym_padding
 import os
 import mysql.connector
 import base64
 
 #pip install cryptography
+
+SALT = ""
+KEY = ""
 
 def dbconnect():
     conn = mysql.connector.connect(
@@ -39,28 +38,6 @@ def non_select_state(sql,params):
     cursor.execute(sql,params)
     conn.commit()
     conn.close()
-
-def cryptanalysis():
-    # パスワードとソルトを設定（これらは適切に保存する必要があります）
-        password = b'my_password'
-        salt = os.urandom(16)
-
-        # キー導出関数を設定
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=100000,
-            backend=default_backend()
-        )
-
-        # キーを導出
-        key = kdf.derive(password)
-
-        # 暗号化器を設定
-        cipher = Cipher(algorithms.AES(key), modes.CBC(salt), backend=default_backend())
-
-        return cipher
 
 def Createtable():
     params=[]
@@ -105,7 +82,8 @@ def insertdata():
     sql += "'yoshisyou.com'"
     sql += ",22"
 
-    cipher1 = cryptanalysis()
+    # 暗号化器を設定
+    cipher1 = Cipher(algorithms.AES(KEY), modes.CBC(SALT), backend=default_backend())
     encryptor1 = cipher1.encryptor()
     padder1 = sym_padding.PKCS7(128).padder()
     data1 = b'ubuntu'
@@ -116,7 +94,7 @@ def insertdata():
     sql += ",'/home/kazuhiro/Documents/Key/'"
     sql += ",'id_ed25519'"
 
-    cipher2 = cryptanalysis()
+    cipher2 = Cipher(algorithms.AES(KEY), modes.CBC(SALT), backend=default_backend())
     encryptor2 = cipher2.encryptor()
     padder2 = sym_padding.PKCS7(128).padder()
     data2 = b'WIb_.7pxv1D08yhK'
@@ -147,6 +125,7 @@ def selectdate():
     sql += " hostlist02"
     sql += ";"
     
+    print(sql)
     result = select_state(sql,params)
 
     for item in result:
@@ -154,26 +133,28 @@ def selectdate():
         TXT += str(item[1]) + " : "
 
         # Create a new cipher for each decryption
-        cipher3 = cryptanalysis()
+        cipher3 = Cipher(algorithms.AES(KEY), modes.CBC(SALT), backend=default_backend())
         decryptor1 = cipher3.decryptor()
-        coltext = item[2]
-        coltext2 = base64.b64decode(coltext)
-        decrypted_padded_data1 = decryptor1.update(coltext2) + decryptor1.finalize()
+        coltext1 = item[2]
+        dccoltext1 = base64.b64decode(coltext1)
+        decrypted_padded_data1 = decryptor1.update(dccoltext1) + decryptor1.finalize()
         unpadder1 = sym_padding.PKCS7(128).unpadder()
         decrypted_data1 = unpadder1.update(decrypted_padded_data1) + unpadder1.finalize()
-        sql += ",'" + decrypted_data1 + "'"
+        TXT += decrypted_data1.decode() + " : "
 
         TXT += item[3] + " : "
+        TXT += item[4] + " : "
 
         # Create a new cipher for each decryption
-        cipher4 = cryptanalysis()
+        cipher4 = Cipher(algorithms.AES(KEY), modes.CBC(SALT), backend=default_backend())
         decryptor2 = cipher4.decryptor()
-        decrypted_padded_data2 = decryptor2.update(base64.b64decode(item[4])) + decryptor2.finalize()
+        coltext2 = item[5]
+        dccoltext2 = base64.b64decode(coltext2)
+        decrypted_padded_data2 = decryptor2.update(dccoltext2) + decryptor2.finalize()
         unpadder2 = sym_padding.PKCS7(128).unpadder()
         decrypted_data2 = unpadder2.update(decrypted_padded_data2) + unpadder2.finalize()
-        sql += ",'" + base64.b64decode( decrypted_data2) + "'"
+        TXT += decrypted_data2.decode() + " : "
         
-        TXT += item[5] + " : "
         TXT += item[6] + " : "
         TXT += item[7] + " : "
         TXT += item[8] + " : "
@@ -187,11 +168,23 @@ def Droptable():
 
 def main():
 
+    #テキストファイルからソルトとキーを取り出す
+    f = open('salt_key.txt', 'r', encoding='UTF-8')
+
+    line = f.readline()
+    global SALT
+    SALT= base64.b64decode(line.replace('s:',''))
+    line = f.readline()
+    global KEY
+    KEY= base64.b64decode(line.replace('k:',''))
+
+    f.close()
+
     #テーブルを作成
-    #Createtable()
+    Createtable()
 
     #データ投入
-    #insertdata()
+    insertdata()
     
     #データを検索
     selectdate()
